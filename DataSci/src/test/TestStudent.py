@@ -26,10 +26,11 @@ class TestCaseStudent(object):
         student_FName = 'Joe'
         student_LName = 'McTest'
         student_GPA = 2.6
+        student_Major = 'Art'
         
         # ==================================
         #Create Test Cases.   Insert the new student, then read the db on the new index to confirm the data is correct
-        TC_createStudent = self.my_sqlconnector.create_student(student_LName, student_FName, student_GPA)
+        TC_createStudent = self.my_sqlconnector.create_student(student_LName, student_FName, student_GPA, student_Major)
         TC_readStudent = self.my_sqlconnector.read_table_byID("students", TC_createStudent.newId)
         self.checklst.append(TC_createStudent)
         self.checklst.append(TC_readStudent)
@@ -39,7 +40,7 @@ class TestCaseStudent(object):
         # Check results of tests.
         
         flg_Test_Result = True
-        string_correct_json = "{{'id': {idnum}, 'LastName': 'McTest', 'FirstName': 'Joe', 'GPA': 2.6}}".format(idnum = TC_createStudent.newId)
+        string_correct_json = "{{'id': {idnum}, 'LastName': 'McTest', 'FirstName': 'Joe', 'GPA': 2.6, 'Major': 'Art'}}".format(idnum = TC_createStudent.newId)
              
         #If the result matches the correct string, return TRUE. Otherwise, show the mis-match result.
         if TC_readStudent.json == string_correct_json:

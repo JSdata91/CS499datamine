@@ -8,9 +8,7 @@ Created on Mon Jul  5 19:14:48 2021
 import pymysql.cursors
 
 import sys
-import os
-sys.path.append(os.getcwd())
-
+sys.path.insert(0, './test')
 from TestMessage import TestMessage
 
 class PyMyConnection(object):
@@ -31,11 +29,13 @@ class PyMyConnection(object):
         self.TMessage = TestMessage()
         self.ReadTMessage = TestMessage()
     
+    
+    
     """======================================= """
     """---------- CREATE FUCTIONS -------------- """
     
     #Insert a new student (no classes assigned)
-    def create_student(self, lastName, firstName, GPA ):
+    def create_student(self, lastName, firstName, GPA, Major ):
         self.TMessage.resetMessage()
         
         if (lastName is None or firstName is None or GPA is None):
@@ -45,7 +45,7 @@ class PyMyConnection(object):
         with self.connection:
             with self.connection.cursor() as cursor:
                 # Create a new record
-                sql = "INSERT INTO `students` (`LastName`, `FirstName`, `GPA`) VALUES ('" + lastName + "', '" + firstName + "','" + str(GPA) + "')"
+                sql = "INSERT INTO `students` (`LastName`, `FirstName`, `GPA`, 'Major') VALUES ('" + lastName + "', '" + firstName + "', '" + str(GPA) + "', '" + Major + ")"
                 cursor.execute(sql)
                 id_result = cursor.lastrowid
             self.connection.commit()   
@@ -106,6 +106,19 @@ class PyMyConnection(object):
     """======================================= """
     """---------- READ FUCTIONS -------------- """
     
+    def read_allMajors(self):
+        self.ReadTMessage.resetMessage()
+        self.connection.ping()
+        
+        with self.connection.cursor() as cursor:
+            # Read a single record
+            selected_Table = 'school.students'
+            sql = "SELECT DISTINCT Major FROM {}".format(selected_Table)            
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            cursor.close()
+            return result
+    
     def read_table_byID(self, tableName, IDval):
         #Reset/Re-establish connection to database
         self.ReadTMessage.resetMessage()
@@ -122,17 +135,29 @@ class PyMyConnection(object):
             self.ReadTMessage.message = '[read_{}_id]: Success!'.format(tableName)
             self.ReadTMessage.json = str(result)
             return self.ReadTMessage        
-        #Reset/Re-establish connection to database
+        
+    def read_studentGPA(self):
         self.ReadTMessage.resetMessage()
         self.connection.ping()
         
         with self.connection.cursor() as cursor:
             # Read a single record
-            sql = "SELECT * FROM `classes` WHERE `id`=%s"
-            cursor.execute(sql, (classID))
-            result = cursor.fetchone()
+            selected_Table = 'school.students'
+            sql = "SELECT FirstName, LastName, GPA, Major FROM {}".format(selected_Table)            
+            cursor.execute(sql)
+            result = cursor.fetchall()
             cursor.close()
-            self.ReadTMessage.result = True
-            self.ReadTMessage.message = '[read_class_id]: Success!'
-            self.ReadTMessage.json = str(result)
-            return self.ReadTMessage
+            return result
+        
+    def read_allTeachers(self):
+        self.ReadTMessage.resetMessage()
+        self.connection.ping()
+        
+        with self.connection.cursor() as cursor:
+            # Read a single record
+            selected_Table = 'school.teachers'
+            sql = "SELECT * FROM {}".format(selected_Table)            
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            cursor.close()
+            return result
