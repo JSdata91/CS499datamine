@@ -4,14 +4,17 @@ Created on Mon Jul  5 19:11:19 2021
 
 @author: John Shumway
 """
-
+from datetime import datetime
 from sqlconnector import PyMyConnection
 import matplotlib.pyplot as plt
 import numpy as np
 
 #=======================
 # Pre-setup
-
+timestamp = datetime.now()
+str_tstamp = timestamp.strftime("%d%m%Y-%H%M%S")
+chart_path = ".\charts\\"
+fileName = chart_path+ 'GPAOverview' + str_tstamp + '.png'
 majors_lst = []
 
 file1 = open('../lib/Majors.txt', 'r')
@@ -92,6 +95,9 @@ def dataGraph(results, category_names):
     ax.legend(ncol=len(category_names), bbox_to_anchor=(0, 1),
               loc='lower left', fontsize='small')
     
+    plt.savefig(fileName, format='png', dpi=fig.dpi)
+    mysql_conn.create_dataBlob('dataSci_Test', fileName, '001')
     plt.show()
+    
 
 dataGraph(res_dct, category_names)

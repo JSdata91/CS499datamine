@@ -33,7 +33,7 @@ class PyMyConnection(object):
     
     """======================================= """
     """---------- CREATE FUCTIONS -------------- """
-    
+   
     #Insert a new student (no classes assigned)
     def create_student(self, lastName, firstName, GPA, Major ):
         self.TMessage.resetMessage()
@@ -41,6 +41,8 @@ class PyMyConnection(object):
         if (lastName is None or firstName is None or GPA is None):
             self.TMessage.result = False
             self.TMessage.setMessage('[create_student]: Error with input parameters')
+            
+            return self.TMessage
             
         with self.connection:
             with self.connection.cursor() as cursor:
@@ -58,17 +60,19 @@ class PyMyConnection(object):
         return self.TMessage
             
     #Insert a new Teacher
-    def create_teacher(self, lastName, firstName ):
+    def create_teacher(self, lastName, firstName, years, pay, rating ):
         self.TMessage.resetMessage()
         
         if (lastName is None or firstName is None):
             self.TMessage.result = False
             self.TMessage.setMessage('[create_teacher]: Error with input parameters')
             
+            return self.TMessage
+            
         with self.connection:
             with self.connection.cursor() as cursor:
                 # Create a new record
-                sql = "INSERT INTO `teachers` ( `LastName`, `FirstName`) VALUES ('" + lastName + "', '" + firstName + "')"
+                sql = "INSERT INTO `teachers` ( `LastName`, `FirstName`, 'yearsEmployeed', 'salary', 'raiting') VALUES ('" + lastName + "', '" + firstName + "', '" + years + "', '" + pay + "', '" + rating + "')"
                 cursor.execute(sql)
                 id_result = cursor.lastrowid
             self.connection.commit()   
@@ -88,6 +92,8 @@ class PyMyConnection(object):
             self.TMessage.result = False
             self.TMessage.setMessage('[create_class]: Error with input parameters')
             
+            return self.TMessage
+            
         with self.connection:
             with self.connection.cursor() as cursor:
                 # Create a new record
@@ -103,6 +109,35 @@ class PyMyConnection(object):
         
         return self.TMessage
     
+    
+    #Insert a new png image
+    def create_dataBlob(self, image_name, image_url, group_id):
+        self.TMessage.resetMessage()
+        
+        if(image_name is None or image_url is None):
+            self.TMessage.result = False
+            self.TMessage.setMessage('[create_dataBlob]: Error with input parameters')
+                             
+        try:
+            with self.connection:
+                with self.connection.cursor() as cursor:
+                    sql_insert_blob_query = """ INSERT INTO school.charts
+                                  (GroupCode, FileName, ChartData) VALUES (%s,%s,%s)"""
+                                  
+                    with open(image_url, 'rb') as file:
+                        binaryData = file.read()
+                        
+                    # Convert data into tuple format
+                    insert_blob_tuple = (group_id, image_name, binaryData)
+                    cursor.execute(sql_insert_blob_query, insert_blob_tuple)
+                    self.connection.commit()
+                    self.connection.cursor().close() 
+                    self.TMessage.message = 'Successfully performed the BLOB Insert'
+                    return self.TMessage                    
+                    
+        except self.connection.Error as error:
+           print("Failed inserting BLOB data into MySQL table {}".format(error))
+            
     """======================================= """
     """---------- READ FUCTIONS -------------- """
     
@@ -161,3 +196,73 @@ class PyMyConnection(object):
             result = cursor.fetchall()
             cursor.close()
             return result
+        
+    def read_charts_by_group(self, group_id):
+        self.TMessage.resetMessage()
+        
+        if(group_id is None):
+            self.TMessage.result = False
+            self.TMessage.setMessage('[read_charts_by_group]: Error with input parameters')
+                             
+        try:
+            with self.connection:
+                with self.connection.cursor() as cursor:
+                    sql = "SELECT * FROM school.charts WHERE GroupCode={}".format(group_id)
+                    cursor.execute(sql)
+                    result = cursor.fetchall()
+                    cursor.close()  
+                    return result
+                
+        except self.connection.Error as error:
+           print("Failed reading BLOB data from MySQL table {}".format(error))
+        
+        
+    def read_chart_to_file(self, chartID, newFilename):
+        self.TMessage.resetMessage()
+        
+        if(chartID is None or newFilename is None):
+            self.TMessage.result = False
+            self.TMessage.setMessage('[read_dataBlob]: Error with input parameters')
+                             
+        try:
+            with self.connection:
+                with self.connection.cursor() as cursor:
+                    sql = "SELECT ChartData FROM school.chart WHERE id={}".format(chartID)
+                    cursor.execute(sql)
+                    data = cursor.fetchall()
+                    cursor.close()  
+                    
+                    #create file with the BLOB data
+                    with open(newFilename, 'wb') as file:
+                        file.write(data)
+                        
+        except self.connection.Error as error:
+           print("Failed reading BLOB data from MySQL table {}".format(error))
+        
+    """======================================= """
+    """--------- UPDATE FUCTIONS ------------- """
+    
+    def update_student_name(self, student_id, new_firstName, new_lastName):
+        self.TMessage.resetMessage()
+        
+        if (new_firstName is None or new_lastName is None or student_id is None):
+            self.TMessage.result = False
+            self.TMessage.setMessage('[update_student_name]: Error with input parameters')
+            
+            return self.TMessage
+            
+        with self.connection:
+            with self.connection.cursor() as cursor:
+                # Update a new record
+                sql = "UPDATE School.student set FirstName = {}, LastName = {}  where id={}".format(new_firstName, new_lastName, student_id ) 
+                cursor.execute(sql)
+                id_result = cursor.lastrowid
+            self.connection.commit()   
+            self.connection.cursor().close()
+            #Set the Test Case settings
+            self.TMessage.result = True
+            self.TMessage.message = '[update_student_name]: Successfully performed the Student Update'                  
+            self.TMessage.newId = id_result
+        
+        return self.TMessage
+    
