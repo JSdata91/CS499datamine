@@ -8,7 +8,7 @@ Created on Mon Jul  5 19:14:48 2021
 import pymysql.cursors
 
 import sys
-sys.path.insert(0, './test')
+sys.path.insert(0, './tests')
 from TestMessage import TestMessage
 
 class PyMyConnection(object):
@@ -37,6 +37,7 @@ class PyMyConnection(object):
     #Insert a new student (no classes assigned)
     def create_student(self, lastName, firstName, GPA, Major ):
         self.TMessage.resetMessage()
+        self.connection.ping()
         
         if (lastName is None or firstName is None or GPA is None):
             self.TMessage.result = False
@@ -47,7 +48,7 @@ class PyMyConnection(object):
         with self.connection:
             with self.connection.cursor() as cursor:
                 # Create a new record
-                sql = "INSERT INTO `students` (`LastName`, `FirstName`, `GPA`, 'Major') VALUES ('" + lastName + "', '" + firstName + "', '" + str(GPA) + "', '" + Major + ")"
+                sql = "INSERT INTO `students` (`LastName`, `FirstName`, `GPA`, `Major`) VALUES ('" + lastName + "', '" + firstName + "', '" + str(GPA) + "', '" + Major + "')"
                 cursor.execute(sql)
                 id_result = cursor.lastrowid
             self.connection.commit()   
@@ -62,6 +63,7 @@ class PyMyConnection(object):
     #Insert a new Teacher
     def create_teacher(self, lastName, firstName, years, pay, rating ):
         self.TMessage.resetMessage()
+        self.connection.ping()
         
         if (lastName is None or firstName is None):
             self.TMessage.result = False
@@ -72,7 +74,7 @@ class PyMyConnection(object):
         with self.connection:
             with self.connection.cursor() as cursor:
                 # Create a new record
-                sql = "INSERT INTO `teachers` ( `LastName`, `FirstName`, 'yearsEmployeed', 'salary', 'raiting') VALUES ('" + lastName + "', '" + firstName + "', '" + years + "', '" + pay + "', '" + rating + "')"
+                sql = "INSERT INTO `teachers` ( `LastName`, `FirstName`, `yearsEmployeed`, `salary`, `rating`) VALUES ('" + lastName + "', '" + firstName + "', '" + str(years) + "', '" + str(pay) + "', '" + str(rating) + "')"
                 cursor.execute(sql)
                 id_result = cursor.lastrowid
             self.connection.commit()   
@@ -87,6 +89,7 @@ class PyMyConnection(object):
     #Insert a new Class
     def create_class(self, className, studentID, teacherID):
         self.TMessage.resetMessage()
+        self.connection.ping()
         
         if (className is None or studentID is None or teacherID is None):
             self.TMessage.result = False
@@ -113,6 +116,7 @@ class PyMyConnection(object):
     #Insert a new png image
     def create_dataBlob(self, image_name, image_url, group_id):
         self.TMessage.resetMessage()
+        self.connection.ping()
         
         if(image_name is None or image_url is None):
             self.TMessage.result = False
@@ -199,6 +203,7 @@ class PyMyConnection(object):
         
     def read_charts_by_group(self, group_id):
         self.TMessage.resetMessage()
+        self.connection.ping()
         
         if(group_id is None):
             self.TMessage.result = False
@@ -219,6 +224,7 @@ class PyMyConnection(object):
         
     def read_chart_to_file(self, chartID, newFilename):
         self.TMessage.resetMessage()
+        self.connection.ping()
         
         if(chartID is None or newFilename is None):
             self.TMessage.result = False
@@ -244,6 +250,7 @@ class PyMyConnection(object):
     
     def update_student_name(self, student_id, new_firstName, new_lastName):
         self.TMessage.resetMessage()
+        self.connection.ping()
         
         if (new_firstName is None or new_lastName is None or student_id is None):
             self.TMessage.result = False
@@ -261,8 +268,76 @@ class PyMyConnection(object):
             self.connection.cursor().close()
             #Set the Test Case settings
             self.TMessage.result = True
-            self.TMessage.message = '[update_student_name]: Successfully performed the Student Update'                  
-            self.TMessage.newId = id_result
+            self.TMessage.message = '[update_student_name]: Successfully performed the Student Update'
         
         return self.TMessage
+    
+    def update_student_GPA(self, student_id, new_GPA):
+        self.TMessage.resetMessage()
+        self.connection.ping()
+        
+        if (new_GPA is None or student_id is None):
+            self.TMessage.result = False
+            self.TMessage.setMessage('[update_student_gpa]: Error with input parameters')            
+            return self.TMessage
+            
+        with self.connection:
+            with self.connection.cursor() as cursor:
+                # Update a new record
+                sql = "UPDATE School.students set GPA = {} where id={}".format(new_GPA, student_id ) 
+                cursor.execute(sql)
+                id_result = cursor.lastrowid
+            self.connection.commit()   
+            self.connection.cursor().close()
+            #Set the Test Case settings
+            self.TMessage.result = True
+            self.TMessage.message = '[update_student_name]: Successfully performed the Student Update'
+        
+        return self.TMessage
+    
+    def update_class_teacher(self, class_id, teacher_id):
+        #expected that Teacher id was validated before this function
+        self.TMessage.resetMessage()
+        self.connection.ping()
+        
+        if (class_id is None or teacher_id is None):
+            self.TMessage.result = False
+            self.TMessage.setMessage('[update_class_teacher]: Error with input parameters')            
+            return self.TMessage
+            
+        with self.connection:
+            with self.connection.cursor() as cursor:
+                # Update a new record
+                sql = "UPDATE School.classes set teacherid = {}  where id={}".format(teacher_id, class_id ) 
+                cursor.execute(sql)
+                id_result = cursor.lastrowid
+            self.connection.commit()   
+            self.connection.cursor().close()
+            #Set the Test Case settings
+            self.TMessage.result = True
+            self.TMessage.message = '[update_class_teacher]: Successfully performed the Student Update'
+        
+        return self.TMessage
+    
+    def update_teacher_rating(self, teacher_id, new_rating):
+        self.TMessage.resetMessage()
+        self.connection.ping()
+        
+        if (teacher_id is None or new_rating is None):
+            self.TMessage.result = False
+            self.TMessage.setMessage('[update_teacher_rating]: Error with input parameters')            
+            return self.TMessage
+            
+        with self.connection:
+            with self.connection.cursor() as cursor:
+                # Update a new record
+                sql = "UPDATE School.teachers set rating = {} where id={}".format(new_rating, teacher_id ) 
+                cursor.execute(sql)
+            self.connection.commit()   
+            self.connection.cursor().close()
+            #Set the Test Case settings
+            self.TMessage.result = True
+            self.TMessage.message = '[update_teacher_rating]: Successfully performed the Student Update'
+        
+        return self.TMessage        
     
